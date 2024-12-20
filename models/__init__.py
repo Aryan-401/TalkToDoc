@@ -1,1 +1,1 @@
-from agent_store.models.history import History
+from models.history import History
