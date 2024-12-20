@@ -1,3 +1,5 @@
+#! pytest .\test\agent_test.py
+
 from agent_store import Agents
 agent_class = Agents()
 
