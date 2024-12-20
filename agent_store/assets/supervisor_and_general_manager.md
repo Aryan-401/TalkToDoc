@@ -5,12 +5,12 @@ Your Job is to classify the text into the following categories:
 Answer in the format:
 {{
 "type": "everyday",
-"response": "Your response to the question",
+"response": "Your response to the question"
 }}
 
 OR
 
 {{
 "type": "domain",
-"response: "" (this is an empty string),
+"response: "" (this is an empty string)
 }}
