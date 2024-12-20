@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "talktodoc"
+version = "0.1.0"
+description = ""
+authors = ["Aryan-401 <aryan.raj.garg@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+langchain-groq = "^0.2.1"
+langgraph = "^0.2.59"
+python-dotenv = "^1.0.1"
+groq = "^0.13.1"
+pytest = "^8.3.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
