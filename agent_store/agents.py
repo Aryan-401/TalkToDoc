@@ -13,6 +13,7 @@ class Agents:
     def __init__(self):
         self.audio_model = Groq()
         self.text_model = ChatGroq(model="llama-3.3-70b-versatile")  # or llama-3.3-70b-specdec
+        self.judging_model = ChatGroq(model="gemma2-9b-it")
         self.system_prompts = {}
         for file in os.listdir("agent_store/assets"):
             if file.endswith(".md"):
@@ -28,4 +29,15 @@ class Agents:
         template = ChatPromptTemplate(messages)
         answer = template | self.text_model
         return answer.invoke(input={"query": query}).content
+
+
+    def testing__evaluation_judge(self, response, ideal_answer):
+        messages = [("system", self.system_prompts[self.testing__evaluation_judge.__name__])]
+        template = ChatPromptTemplate(messages)
+        answer = template | self.judging_model
+        try:
+            score = float(answer.invoke(input={"response": response, "ideal_response": ideal_answer}).content)
+        except:
+            score = -1.0
+        return score
 
