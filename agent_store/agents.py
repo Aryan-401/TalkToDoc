@@ -32,14 +32,13 @@ class Agents:
         answer = template | self.text_model
         return answer.invoke(input={"query": query}).content
 
-
     def testing__evaluation_judge(self, response, ideal_answer):
         messages = [("system", self.system_prompts[self.testing__evaluation_judge.__name__])]
         template = ChatPromptTemplate(messages)
         answer = template | self.judging_model
         try:
             score = float(answer.invoke(input={"response": response, "ideal_response": ideal_answer}).content)
-        except:
+        except Exception as e:
+            print(f"Exception: {e}")
             score = -1.0
         return score
-
