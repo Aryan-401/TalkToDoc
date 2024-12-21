@@ -1,8 +1,8 @@
 #! pytest .\test\agent_test.py
 import json
-
+from models import History
 from agent_store import Agents
-
+from test import helper
 agent_class = Agents()
 
 
@@ -16,28 +16,21 @@ def test_audio_recognition():
     audio.close()
     return
 
-def test_supervisor_and_general_manager():
+def test_supervisor_and_general_manager_whole():
     history = [
-        {
-            "sender": "user",
-            "message": "Hello"
-        },
-        {
-            "sender": "assistant",
-            "message": "Hi"
-        }
+        History(speaker="user", message="Hello"),
+        History(speaker="assistant", message="Hi")
     ]
     ideal_answer = """{
-"type": "everyday",
-"response": "Hi! How can I help?"
-}"""
-    response = agent_class.supervisor_and_general_manager("Hello", history)
-    try:
-        response_dict = json.loads(response)
-        type_, response_ = response_dict["type"], response_dict["response"]
-    except:
-        raise AssertionError("The response is not in JSON/Proper JSON format")
-    print("In Supervisor and General Manager, the response is: ", response)
-    score = agent_class.testing__evaluation_judge(response, ideal_answer)
+    "type": "everyday",
+    "response": "Hi! How can I help?"
+    }"""
+
+    score = helper.test_supervisor_and_general_manager(agent_class, ideal_answer, history, "Hello")
     assert score >= 0.7
-    return
+    ideal_answer = """{
+    "type": "domain",
+    "response": '["Q3_financial_report.pdf", "profit_analysis.xlsx"]'
+    }"""
+    score = helper.test_supervisor_and_general_manager(agent_class, ideal_answer, history, "How do thr profits in Q3 look?")
+    assert score >= 0.7
