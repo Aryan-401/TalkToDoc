@@ -1,3 +1,5 @@
+from typing import List
+
 from langchain_core.prompts import ChatPromptTemplate
 import os
 from models import History
@@ -23,7 +25,7 @@ class Agents:
         return self.audio_model.audio.transcriptions.create(model=model, file=audio, language=language,
                                                             response_format="text")
 
-    def supervisor_and_general_manager(self, query, history: History):
+    def supervisor_and_general_manager(self, query, history: List[History]):
         messages = [("system", self.system_prompts[self.supervisor_and_general_manager.__name__])]
         helper_history__history_to_chat_prompt(history, messages, query)
         template = ChatPromptTemplate(messages)
