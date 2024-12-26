@@ -49,3 +49,10 @@ def test_jina_text_embeddings():
     for test in testable:
         assert isinstance(test.get("embedding", None), list)
         assert len(test.get("embedding", [])) == 1024
+
+
+def test_other_file_formats_to_markdown():
+    path = r"test/assets/Cat03.jpg"
+    markdown = helper.helper_other_file_formats.convert_other_files_to_markdown(path)
+    assert isinstance(markdown, str)
+    assert len(markdown) > 0

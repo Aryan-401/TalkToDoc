@@ -1,3 +1,4 @@
 from helper.helper_history import helper_history__history_to_chat_prompt
 from helper.helper_jina import helper__web_to_markdown, helper__multimodal_embeddings
 from helper.helper_test import test_supervisor_and_general_manager
+from helper.helper_other_file_formats import convert_other_files_to_markdown
