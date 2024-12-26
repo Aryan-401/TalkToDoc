@@ -12,6 +12,7 @@ langgraph = "^0.2.59"
 python-dotenv = "^1.0.1"
 groq = "^0.13.1"
 pytest = "^8.3.4"
+markitdown = "^0.0.1a3"
 
 
 [build-system]
