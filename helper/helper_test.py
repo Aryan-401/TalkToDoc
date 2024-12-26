@@ -1,9 +1,9 @@
 import json
-from agent_store import Agents
+from typing import List
 from models import History
 
 
-def test_supervisor_and_general_manager(agent_class: Agents, ideal_answer: str, history: History, query: str):
+def test_supervisor_and_general_manager(agent_class, ideal_answer: str, history: List[History], query: str):
     response = agent_class.supervisor_and_general_manager(query, history)
     try:
         response_dict = json.loads(response)
