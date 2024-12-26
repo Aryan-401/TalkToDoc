@@ -6,7 +6,7 @@ from models import History
 from langchain_groq import ChatGroq
 from groq import Groq
 from dotenv import load_dotenv
-from agent_store.helper_history import helper_history__history_to_chat_prompt
+from helper import helper_history__history_to_chat_prompt
 
 load_dotenv()
 
