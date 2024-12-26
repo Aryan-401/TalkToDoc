@@ -29,7 +29,7 @@ def test_jina_website_to_markdown():
     assert len(markdown) > 0
 
 
-def test_jina_embeddings():
+def test_jina_multimodal_embeddings():
     content = [
         {"text": "Hello, how are you doing?"},
         # {
@@ -40,3 +40,12 @@ def test_jina_embeddings():
     testable = embeddings.get("data", [None])
     for test in testable:
         assert isinstance(test.get("embedding", None), list)
+
+
+def test_jina_text_embeddings():
+    content = ["Hello, how are you doing?", "I am doing well"]
+    embeddings = helper.helper_jina.helper__text_embeddings(content)
+    testable = embeddings.get("data", [None])
+    for test in testable:
+        assert isinstance(test.get("embedding", None), list)
+        assert len(test.get("embedding", [])) == 1024
