@@ -1,7 +1,7 @@
 import json
 from uuid import uuid4
 from langchain_core.documents import Document
-from langchain_qdrant import QdrantVectorStore
+from langchain_qdrant import QdrantVectorStore, RetrievalMode
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, FilterSelector, Filter
 from qdrant_docustore import embeddings
@@ -24,8 +24,12 @@ class QdrantLink:
         self.vector_store = QdrantVectorStore(
             client=self.client,
             collection_name="docustore",
-            embedding=self.embeddings
+            embedding=self.embeddings,
+            retrieval_mode=RetrievalMode.DENSE
         )
+
+    def return_client(self):
+        return self.client
 
     def add(self, documents: List[str], metadata: List[Dict[str, str]]):
         generated_uuids = [str(uuid4()) for _ in range(len(documents))]
@@ -46,6 +50,18 @@ class QdrantLink:
         self.vector_store.delete(ids=uuid)
         return uuid
 
+    def add_embeddings_direct(self, embedding, metadata):
+        generated_uuid = str(uuid4())
+        self.vector_store.add_documents(documents=[
+            Document(
+                embedding=embedding,
+                page_content="",
+                metadata=metadata
+                     )
+                                                   ],
+                                        ids=[generated_uuid],)
+        return generated_uuid
+
     def close_connection(self):
         self.client.close()
         return True
@@ -58,3 +74,13 @@ class QdrantLink:
         )
                            )
         return True
+
+    def query_collection(self, query: str):
+        result = self.vector_store.similarity_search(
+            query,
+        )
+        return result
+
+    def show_all_documents(self):
+        result = self.vector_store.similarity_search(query="", score_threshold=-1)
+        return result

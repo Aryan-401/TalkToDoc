@@ -38,6 +38,16 @@ def test_qdrant_delete(link: QdrantLink):
     assert link.delete(uuid) == uuid
     link.close_connection()
 
+def test_qdrant_query(link: QdrantLink):
+    documents = ["Hello, how are you doing?", "I am doing well"]
+    metadata = [{"name": "John Doe"}, {"name": "Jane Doe"}]
+    uuid = link.add(documents, metadata)
+    assert isinstance(uuid, list)
+    assert len(uuid) == 2
+    result = link.query_collection("Hello, how are you doing?")
+    for res in result:
+        print(res.model_dump_json())
+    link.close_connection()
 
 def test_qdrant_clean(link: QdrantLink):
     link.clear_collection()

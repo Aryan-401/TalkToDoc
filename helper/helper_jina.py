@@ -23,7 +23,7 @@ def helper__multimodal_embeddings(content: List[Dict[str, str]]):
 
     data = {
         "model": "jina-clip-v2",
-        "dimensions": 1,
+        "dimensions": 10,
         "normalized": True,
         "embedding_type": "float",
         "input": content
