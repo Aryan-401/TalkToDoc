@@ -2,6 +2,7 @@
 from qdrant_docustore import JinaEmbed
 from qdrant_docustore import QdrantLink
 
+
 def test_jina_embed_query():
     j = JinaEmbed()
     query = "Hello, how are you doing?"
@@ -38,6 +39,7 @@ def test_qdrant_delete(link: QdrantLink):
     assert link.delete(uuid) == uuid
     link.close_connection()
 
+
 def test_qdrant_query(link: QdrantLink):
     documents = ["Hello, how are you doing?", "I am doing well"]
     metadata = [{"name": "John Doe"}, {"name": "Jane Doe"}]
@@ -48,6 +50,7 @@ def test_qdrant_query(link: QdrantLink):
     for res in result:
         print(res.model_dump_json())
     link.close_connection()
+
 
 def test_qdrant_clean(link: QdrantLink):
     link.clear_collection()
