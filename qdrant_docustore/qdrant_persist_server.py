@@ -82,5 +82,5 @@ class QdrantLink:
         return result
 
     def show_all_documents(self):
-        result = self.vector_store.similarity_search(query="", score_threshold=-1)
+        result = self.vector_store.similarity_search(query="", score_threshold=-1, k=1000)
         return result
