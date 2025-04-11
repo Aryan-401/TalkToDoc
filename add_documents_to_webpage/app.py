@@ -4,26 +4,13 @@ import time
 import uuid
 from datetime import datetime
 
-import nltk
-from nltk.tokenize import sent_tokenize
-
-# Download both punkt and punkt_tab
-try:
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
-    nltk.download("punkt")
-
-# Specifically add punkt_tab download
-try:
-    nltk.data.find("tokenizers/punkt_tab")
-except LookupError:
-    nltk.download("punkt_tab")
-
 from dotenv import load_dotenv
 
 load_dotenv()
 
 import streamlit as st
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 
 st.set_page_config(page_title="Vector DB Uploader", layout="centered")
 
@@ -46,48 +33,28 @@ def get_session():
 qdrant_link, jina_embed = get_session()
 
 
-# --- Sentence-aware Chunker ---
-def sentence_chunker(text, max_tokens=200):
-    from transformers import GPT2TokenizerFast
-    tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+# --- LangChain Text Splitter ---
+def langchain_chunker(text, chunk_size=1000, chunk_overlap=200):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,  # chunk size (characters)
+        chunk_overlap=chunk_overlap,  # chunk overlap (characters)
+        add_start_index=True,  # track index in original document
+    )
 
-    # Modified error handling for punkt_tab
-    try:
-        sentences = sent_tokenize(text)
-    except LookupError as e:
-        st.error(f"NLTK tokenizer error: {str(e)}")
-        # Try to fix the issue by downloading punkt directly
-        nltk.download("punkt")
+    # Import Document class from langchain
+    from langchain_core.documents import Document
 
-        # If punkt_tab is specifically needed, download it too
-        try:
-            nltk.download("punkt_tab")
-        except:
-            pass
+    # Create a proper Document object
+    docs = [Document(page_content=text, metadata={})]
 
-        # Try again
-        try:
-            sentences = sent_tokenize(text)
-        except Exception as new_e:
-            # If still failing, fall back to a simple splitter
-            st.warning("Using fallback sentence splitter")
-            sentences = [s.strip() + "." for s in text.split(".") if s.strip()]
+    # Split the text using the splitter
+    splits = text_splitter.split_documents(docs)
 
-    chunks = []
-    current_chunk = []
+    # Extract just the text content from the splits
+    chunks = [doc.page_content for doc in splits]
+    start_indices = [doc.metadata.get("start_index", 0) for doc in splits]
 
-    for sentence in sentences:
-        tokens = tokenizer.encode(" ".join(current_chunk + [sentence]))
-        if len(tokens) <= max_tokens:
-            current_chunk.append(sentence)
-        else:
-            chunks.append(" ".join(current_chunk))
-            current_chunk = [sentence]
-
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
-
-    return chunks
+    return chunks, start_indices
 
 
 # --- Streamlit UI ---
@@ -144,23 +111,39 @@ if "text" in st.session_state and "metadata" in st.session_state:
     st.write("✅ Text committed. Document will be chunked for embedding.")
     # get sha256 hash of the text
     file_id = uuid.uuid4()
-    chunks = sentence_chunker(st.session_state.text, max_tokens=200)
+
+    # Custom chunk size and overlap controls
+    col1, col2 = st.columns(2)
+    with col1:
+        chunk_size = st.slider("Chunk Size (characters)", 500, 2000, 1000)
+    with col2:
+        chunk_overlap = st.slider("Chunk Overlap (characters)", 0, 500, 200)
+
+    # Use the new langchain chunker
+    chunks, start_indices = langchain_chunker(st.session_state.text, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
     st.write(f"🔍 Previewing {min(3, len(chunks))} of {len(chunks)} chunks:")
     for i, c in enumerate(chunks[:3]):
-        st.code(f"[Chunk {i}]\n{c[:400]}")
+        st.code(f"[Chunk {i}, Start: {start_indices[i]}]\n{c[:400]}")
 
     if st.button("Add to Vector Database"):
         try:
-            embeddings = jina_embed.get_document_jina_embeddings(chunks)
+            # Use the add method instead of add_embeddings_direct
             metadatas = [
-                {**st.session_state.metadata, "chunk_id": i, "data": chunk, "file_id": file_id}
+                {
+                    **st.session_state.metadata,
+                    "chunk_id": i,
+                    "data": chunk,
+                    "file_id": file_id,
+                    "start_index": start_indices[i]
+                }
                 for i, chunk in enumerate(chunks)
             ]
-            st.code(metadatas)
-            uuids = []
-            for n in range(len(embeddings)):
-                uuids.append(qdrant_link.add_embeddings_direct(embedding=embeddings[n],
-                                                  metadata=metadatas[n]))
+            st.code(metadatas[0])  # Show just first metadata record as example
+
+            # Call the add method with chunks and metadata
+            uuids = qdrant_link.add(documents=chunks, metadata=metadatas)
+
             st.success(f"✅ {len(uuids)} chunks added to vector database.")
             del st.session_state.text
             del st.session_state.metadata

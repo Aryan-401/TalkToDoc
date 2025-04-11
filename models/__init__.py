@@ -1,1 +1,1 @@
-from src.models.history import History
+from models.history import History

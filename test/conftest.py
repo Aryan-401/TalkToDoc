@@ -1,5 +1,5 @@
 import pytest
-from src.agent_store import Agents
+from agent_store import Agents
 from qdrant_docustore import QdrantLink
 
 

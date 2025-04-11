@@ -9,12 +9,12 @@ from typing import List, Dict
 
 
 class QdrantLink:
-    def __init__(self):
-        self.client = QdrantClient(path="qdrant_docustore/qdrant_store")
+    def __init__(self, location="qdrant_docustore/qdrant_store", collection_name="docustore"):
+        self.client = QdrantClient(path=location)
         self.embeddings = embeddings.JinaEmbed().text_embeddings
         all_collections = [a.get("name", None) for a in
                            json.loads(self.client.get_collections().model_dump_json())['collections']]
-        if 'docustore' not in all_collections:
+        if collection_name not in all_collections:
             self.client.create_collection(collection_name="docustore",
                                           vectors_config=VectorParams(
                                               size=1024,
