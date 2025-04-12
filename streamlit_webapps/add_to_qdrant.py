@@ -10,7 +10,6 @@ load_dotenv()
 
 import streamlit as st
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
 
 st.set_page_config(page_title="Vector DB Uploader", layout="centered")
 
@@ -87,7 +86,7 @@ elif st.tabs == "File (we'll try our best)":
             with open(filename, "wb") as f:
                 f.write(file.getbuffer())
             text = converter.convert_files_to_text(filename)
-            os.remove(filename)
+            # os.remove(filename)
             metadata = {"source": filename, "type": "file"}
             st.session_state.text = text
             st.session_state.metadata = metadata
