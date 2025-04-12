@@ -62,7 +62,7 @@ def format_sources(sources):
         if src.get("source"):
             source_val = src["source"]
             if source_val.startswith("http://") or source_val.startswith("https://"):
-                display_text = source_val[:100] + ("..." if len(source_val) > 100 else "")
+                display_text = source_val[:50] + ("..." if len(source_val) > 50 else "")
                 source_text.append(f'Source: <a href="{source_val}" target="_blank">{display_text}</a>')
             else:
                 source_text.append(f"Source: {source_val}")
