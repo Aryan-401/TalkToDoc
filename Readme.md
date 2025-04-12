@@ -21,3 +21,4 @@ git clone https://github.com/Aryan-401/TalkToDoc.git
 2. Jina
    - Open `https://jina.ai/embeddings/` in a **PRIVATE WINDOW** and scroll down til you find a hidden key. 
    - You can use this key until its credits get used up, then repeat the process.
+   - fuk u aryan
