@@ -165,6 +165,8 @@ with st.expander("⚠️ Dangerous: Delete Entire Vector DB"):
         if st.button("Delete All Data from Vector DB"):
             try:
                 qdrant_link.clear_collection()
+                for file in os.listdir(r"qdrant_docustore/files"):
+                    os.remove(os.path.join(r"qdrant_docustore/files", file))
                 st.success("✅ Vector DB has been cleared.")
             except Exception as e:
                 st.error(f"Error clearing vector DB: {e}")
