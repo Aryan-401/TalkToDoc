@@ -45,7 +45,7 @@ if 'rag_system' not in st.session_state:
         try:
             f = QdrantLink()
             g = JinaEmbed()
-            st.session_state.rag_system = Rag(vector_store=f.vector_store, embedder=g)
+            st.session_state.rag_system = Rag(qdlink=f, embedder=g)
             st.success("RAG system initialized successfully!")
         except Exception as e:
             st.error(f"Error initializing RAG system: {str(e)}")
@@ -72,6 +72,8 @@ def format_sources(sources):
             source_text.append(f"Chunk ID: {src['chunk_id']}")
         if src.get("score"):
             source_text.append(f"Score: {src['score']:.3f}")
+        if src.get("reranked_score"):
+            source_text.append(f"Reranked Score: {src['reranked_score']:.3f}")
         formatted += f"<div class='source-item'>{', '.join(source_text)}</div>"
     formatted += "</div>"
     return formatted
@@ -115,17 +117,30 @@ with st.sidebar:
     st.info("Using LLaMA 3.3 70B Versatile model via Groq")
 
     if 'rag_system' in st.session_state:
-        threshold = st.slider(
+        pre_rank_threshold = st.slider(
             "Similarity Threshold",
             min_value=0.0,
             max_value=1.0,
-            value=st.session_state.rag_system.threshold,
+            value=st.session_state.rag_system.pre_rank_threshold,
             step=0.05,
             help="Minimum similarity score required for document retrieval"
         )
-        if threshold != st.session_state.rag_system.get_threshold():
-            st.session_state.rag_system.edit_threshold(threshold)
-            st.success(f"Threshold updated to {threshold}")
+        if pre_rank_threshold != st.session_state.rag_system.get_pre_threshold():
+            st.session_state.rag_system.edit_pre_threshold(pre_rank_threshold)
+            st.success(f"Pre Ranking Threshold updated to {pre_rank_threshold}")
+
+        post_rank_threshold = st.slider(
+            "Post Ranking Similarity Threshold",
+            min_value=0.0,
+            max_value=1.0,
+            value=st.session_state.rag_system.post_rank_threshold,
+            step=0.05,
+            help="Minimum similarity score required for document retrieval after Reranking"
+        )
+        if post_rank_threshold != st.session_state.rag_system.get_post_threshold():
+            st.session_state.rag_system.edit_post_threshold(pre_rank_threshold)
+            st.success(f"Post Ranking Threshold updated to {pre_rank_threshold}")
+
 
     if st.button("Clear Chat History", key="clear_chat"):
         st.session_state.messages = []

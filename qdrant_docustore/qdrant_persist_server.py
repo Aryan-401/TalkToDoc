@@ -2,11 +2,12 @@ import json
 from uuid import uuid4
 from langchain_core.documents import Document
 from langchain_qdrant import QdrantVectorStore, RetrievalMode
+from langchain_community.document_compressors import JinaRerank
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, FilterSelector, Filter
 from qdrant_docustore import embeddings
 from typing import List, Dict
-
+from pprint import pprint
 
 class QdrantLink:
     def __init__(self, location="qdrant_docustore/qdrant_store", collection_name="docustore"):
@@ -57,9 +58,9 @@ class QdrantLink:
                 embedding=embedding,
                 page_content="",
                 metadata=metadata
-                     )
-                                                   ],
-                                        ids=[generated_uuid],)
+            )
+        ],
+            ids=[generated_uuid], )
         return generated_uuid
 
     def close_connection(self):
@@ -75,12 +76,34 @@ class QdrantLink:
                            )
         return True
 
-    def query_collection(self, query: str):
-        result = self.vector_store.similarity_search(
-            query,
+    def query_collection(self, query: str, k: int = 5, threshold: float = 0.5):
+        result = self.vector_store.similarity_search_with_score(
+            query=query,
+            k=k,
+            score_threshold=threshold,
         )
         return result
 
     def show_all_documents(self):
         result = self.vector_store.similarity_search(query="", score_threshold=-1, k=1000)
         return result
+
+    def query_and_rerank(self, query: str, k_pre_rank: int = 10, k_post_rank: int = 5, pre_rank_threshold: float = 0.5, post_rank_threshold: float = 0.7):
+        doc_and_score = self.query_collection(query=query, k=k_pre_rank, threshold=pre_rank_threshold)
+
+        if not doc_and_score:
+            return []
+        doc, score = zip(*doc_and_score)
+        jina = JinaRerank()
+        reranked_results = jina.rerank(
+            documents=list(doc),
+            query=query,
+            top_n=k_post_rank,
+        )
+        final_return = []
+        for col in reranked_results:
+            if col["relevance_score"] >= post_rank_threshold:
+                doc_and_score[col['index']][0].metadata['reranked_score'] = col['relevance_score']
+                final_return.append(doc_and_score[col['index']])
+
+        return final_return
