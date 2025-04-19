@@ -139,8 +139,7 @@ with st.sidebar:
         )
         if post_rank_threshold != st.session_state.rag_system.get_post_threshold():
             st.session_state.rag_system.edit_post_threshold(pre_rank_threshold)
-            st.success(f"Post Ranking Threshold updated to {pre_rank_threshold}")
-
+            st.success(f"Post Ranking Threshold updated to {post_rank_threshold}")
 
     if st.button("Clear Chat History", key="clear_chat"):
         st.session_state.messages = []

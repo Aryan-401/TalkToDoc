@@ -1,20 +1,20 @@
 from langchain import hub
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
+from agent_store.agents import Agents
 
 class Rag:
     def __init__(self, qdlink, embedder, history=None):
         if history is None:
             history = []
-        self.prompt = hub.pull("rlm/rag-prompt")
         self.llm = init_chat_model(model_provider="groq", model="llama-3.3-70b-versatile")
         self.qdlink = qdlink
         self.embedder = embedder
         self.history = history
         self.prompt = self.get_prompt()
         self.pre_rank_threshold = 0.5
-        self.post_rank_threshold = 0.7
+        self.post_rank_threshold = 0.1
+        self.agents = Agents()
 
     def get_pre_threshold(self):
         return self.pre_rank_threshold
@@ -67,7 +67,8 @@ class Rag:
         )
 
     def retrieve_and_generate(self, question):
-        retrieved_docs = self.qdlink.query_and_rerank(query=question, pre_rank_threshold=self.pre_rank_threshold, post_rank_threshold=self.post_rank_threshold)
+        metadata_topics = self.agents.create_metadata(question)
+        retrieved_docs = self.qdlink.query_and_rerank(query=question, pre_rank_threshold=self.pre_rank_threshold, post_rank_threshold=self.post_rank_threshold, metadata_filter=metadata_topics)
         if retrieved_docs:
             retrieved_docs, scores = zip(*retrieved_docs)
             retrieved_docs = list(retrieved_docs)

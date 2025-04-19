@@ -18,6 +18,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from qdrant_docustore import JinaEmbed
 from qdrant_docustore import QdrantLink
 from file_to_text import ConvertDocument
+from agent_store.agents import Agents
 
 
 # Session setup
@@ -25,11 +26,12 @@ from file_to_text import ConvertDocument
 def get_session():
     qdrant_link_local = QdrantLink()
     jina_embed_local = JinaEmbed()
+    agents_import = Agents()
     print(datetime.now())
-    return qdrant_link_local, jina_embed_local
+    return qdrant_link_local, jina_embed_local, agents_import
 
 
-qdrant_link, jina_embed = get_session()
+qdrant_link, jina_embed, agent_import = get_session()
 
 
 # --- LangChain Text Splitter ---
@@ -123,38 +125,43 @@ if "text" in st.session_state and "metadata" in st.session_state:
 
     st.write(f"🔍 Previewing {min(3, len(chunks))} of {len(chunks)} chunks:")
     for i, c in enumerate(chunks[:3]):
-        st.code(f"[Chunk {i}, Start: {start_indices[i]}]\n{c[:400]}")
+        st.code(f"[Chunk {i}, Start: {start_indices[i]}]\n{c[:400]}", wrap_lines=True)
 
     if st.button("Add to Vector Database"):
-        try:
-            # Use the add method instead of add_embeddings_direct
-            metadatas = [
-                {
-                    **st.session_state.metadata,
-                    "chunk_id": i,
-                    "data": chunk,
-                    "file_id": file_id,
-                    "start_index": start_indices[i]
-                }
-                for i, chunk in enumerate(chunks)
-            ]
-            st.code(metadatas[0])  # Show just first metadata record as example
+        with st.spinner("Adding to vector database... Topic Creation may take time"):
+            try:
+                # Use the add method instead of add_embeddings_direct
+                metadatas = []
+                for i, chunk in enumerate(chunks):
+                    metadatas.append(
+                        {
+                            **st.session_state.metadata,
+                            "chunk_id": i,
+                            # "data": chunk,
+                            "file_id": file_id,
+                            "start_index": start_indices[i],
+                            "topics": agent_import.create_metadata(chunk).get("topic", []),
+                        }
+                    )
+                    time.sleep(2)  # So we dont get rate limited
 
-            # Call the add method with chunks and metadata
-            uuids = qdrant_link.add(documents=chunks, metadata=metadatas)
+                st.code(metadatas[0], wrap_lines=True)  # Show just first metadata record as example
 
-            st.success(f"✅ {len(uuids)} chunks added to vector database.")
-            del st.session_state.text
-            del st.session_state.metadata
-        except Exception as e:
-            st.error(f"Error adding to vector DB: {e}")
+                # Call the add method with chunks and metadata
+                uuids = qdrant_link.add(documents=chunks, metadata=metadatas)
+
+                st.success(f"✅ {len(uuids)} chunks added to vector database.")
+                del st.session_state.text
+                del st.session_state.metadata
+            except Exception as e:
+                st.error(f"Error adding to vector DB: {e}")
 
 # --- Show all documents ---
 if st.button("Show All Documents (Last 1k)"):
     try:
         all_documents = qdrant_link.show_all_documents()
         for doc in all_documents:
-            st.code(doc.model_dump_json())
+            st.code(doc.model_dump_json(), wrap_lines=True)
     except Exception as e:
         st.error(f"Error fetching documents: {e}")
 
