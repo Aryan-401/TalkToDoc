@@ -140,7 +140,7 @@ if "text" in st.session_state and "metadata" in st.session_state:
                             # "data": chunk,
                             "file_id": file_id,
                             "start_index": start_indices[i],
-                            "topics": agent_import.create_metadata(chunk).get("topic", []),
+                            "topics": [m.lower() for m in agent_import.create_metadata(chunk).get("topic", [])],
                         }
                     )
                     time.sleep(2)  # So we dont get rate limited

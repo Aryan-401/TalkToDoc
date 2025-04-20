@@ -84,14 +84,17 @@ class QdrantLink:
             raise TypeError("metadata_filter must be a dictionary")
         print(metadata_filter)
         filter_any = Filter(
-            should=[
+            must=[
                 FieldCondition(
                     key="topics",
                     match=MatchAny(
-                        any=metadata_filter.get("topic", [])
+                        any=[m.lower() for m in metadata_filter.get("topic", [])]
                     )
                 )
-            ]
+            ],
+            must_not=[],
+            should=[],
+            min_should=[]
         )
         print(filter_any)
         result = self.vector_store.similarity_search_with_score(
@@ -100,6 +103,7 @@ class QdrantLink:
             score_threshold=threshold,
             # filter=filter_any
         )
+        # print([a[0].metadata["topics"] for a in result])
         return result
 
     def show_all_documents(self):

@@ -19,7 +19,7 @@ class Agents:
         self.audio_model = Groq()
         self.text_model = ChatGroq(model="llama-3.3-70b-versatile")  # or llama-3.3-70b-specdec
         self.judging_model = ChatGroq(model="gemma2-9b-it")
-        self.metadata_model = init_chat_model("llama-3.3-70b-versatile", model_provider="groq")
+        self.metadata_model = init_chat_model("llama3-8b-8192", model_provider="groq")
         self.system_prompts = {}
         for file in os.listdir("agent_store/assets"):
             with open("agent_store/assets/" + file, "r") as f:
