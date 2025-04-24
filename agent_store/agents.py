@@ -19,7 +19,7 @@ class Agents:
         self.audio_model = Groq()
         self.text_model = ChatGroq(model="llama-3.3-70b-versatile")  # or llama-3.3-70b-specdec
         self.judging_model = ChatGroq(model="gemma2-9b-it")
-        self.metadata_model = init_chat_model("llama3-8b-8192", model_provider="groq")
+        self.metadata_model = init_chat_model("llama3-70b-8192", model_provider="groq")
         self.system_prompts = {}
         for file in os.listdir("agent_store/assets"):
             with open("agent_store/assets/" + file, "r") as f:
@@ -50,7 +50,7 @@ class Agents:
 
     def create_metadata(self, query):
         class Metadata(BaseModel):
-            topic: List[Optional[str]] = Field(default_factory=list,
+            topic: List[str] = Field(default_factory=list,
                                                description="General topics of the document as a list of strings.")
 
         struct_llm = self.metadata_model.with_structured_output(Metadata)

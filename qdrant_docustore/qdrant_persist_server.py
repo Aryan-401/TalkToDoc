@@ -6,7 +6,7 @@ from langchain_community.document_compressors import JinaRerank
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, FilterSelector, Filter, FieldCondition, MatchAny
 from qdrant_docustore import embeddings
-from typing import List, Dict
+from typing import List, Dict, Optional
 from pprint import pprint
 
 
@@ -77,33 +77,23 @@ class QdrantLink:
                            )
         return True
 
-    def query_collection(self, query: str, k: int = 5, threshold: float = 0.5, metadata_filter: dict = None):
-        if metadata_filter is None:
-            metadata_filter = {}
-        if not isinstance(metadata_filter, dict):
-            raise TypeError("metadata_filter must be a dictionary")
-        print(metadata_filter)
-        filter_any = Filter(
-            must=[
-                FieldCondition(
-                    key="topics",
-                    match=MatchAny(
-                        any=[m.lower() for m in metadata_filter.get("topic", [])]
-                    )
-                )
-            ],
-            must_not=[],
-            should=[],
-            min_should=[]
-        )
-        print(filter_any)
+    def query_collection(self, query: str, k: int = 5, threshold: float = 0.5,
+                         # metadata_filter: dict = None
+                         ):
+        # if metadata_filter is None:
+        #     metadata_filter = {}
+        # if not isinstance(metadata_filter, dict):
+        #     raise TypeError("metadata_filter must be a dictionary")
+        # print(metadata_filter)
+        # filter_any = self.build_filter(metadata_filter)
+        # print(filter_any.model_dump())
         result = self.vector_store.similarity_search_with_score(
             query=query,
             k=k,
             score_threshold=threshold,
             # filter=filter_any
         )
-        # print([a[0].metadata["topics"] for a in result])
+        print([a[0] for a in result])
         return result
 
     def show_all_documents(self):
@@ -111,8 +101,12 @@ class QdrantLink:
         return result
 
     def query_and_rerank(self, query: str, k_pre_rank: int = 20, k_post_rank: int = 7, pre_rank_threshold: float = 0.5,
-                         post_rank_threshold: float = 0.7, metadata_filter: dict = None):
-        doc_and_score = self.query_collection(query=query, k=k_pre_rank, threshold=pre_rank_threshold, metadata_filter=metadata_filter)
+                         post_rank_threshold: float = 0.7,
+                         # metadata_filter: dict = None
+                         ):
+        doc_and_score = self.query_collection(query=query, k=k_pre_rank, threshold=pre_rank_threshold,
+                                              # metadata_filter=metadata_filter
+                                              )
 
         if not doc_and_score:
             return []
@@ -130,3 +124,15 @@ class QdrantLink:
                 final_return.append(doc_and_score[col['index']])
 
         return final_return
+
+    # def build_filter(self, metadata_filter: Dict[str, List[str]]) -> Optional[Filter]:
+    #     must_conditions = []
+    #     if "topic" in metadata_filter:
+    #         must_conditions.append(
+    #             FieldCondition(
+    #                 key="topics",
+    #                 match=MatchAny(any=[t.lower() for t in metadata_filter["topic"]])
+    #                 # Convert filter values to lowercase
+    #             )
+    #         )
+    #     return Filter(must=must_conditions) if must_conditions else None

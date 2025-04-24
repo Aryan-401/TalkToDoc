@@ -67,8 +67,10 @@ class Rag:
         )
 
     def retrieve_and_generate(self, question):
-        metadata_topics = self.agents.create_metadata(question)
-        retrieved_docs = self.qdlink.query_and_rerank(query=question, pre_rank_threshold=self.pre_rank_threshold, post_rank_threshold=self.post_rank_threshold, metadata_filter=metadata_topics)
+        # metadata_topics = self.agents.create_metadata(question)
+        retrieved_docs = self.qdlink.query_and_rerank(query=question, pre_rank_threshold=self.pre_rank_threshold, post_rank_threshold=self.post_rank_threshold,
+                                                      # metadata_filter=metadata_topics
+                                                      )
         if retrieved_docs:
             retrieved_docs, scores = zip(*retrieved_docs)
             retrieved_docs = list(retrieved_docs)
